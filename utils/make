@@ -15,8 +15,8 @@ gen_makefile() {
 	echo "clean:"
 	echo "	rm -f *.o $project"
 	echo
-	echo "submit.cpp: $all_files"
-	echo "	generate_submittion > submit.cpp"
+	echo "submit.txt: $all_files"
+	echo "	generate_submittion > submit.txt"
 	echo
 	echo "run: $project"
 	echo "	./$project"
