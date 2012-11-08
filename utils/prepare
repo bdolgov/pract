@@ -4,7 +4,7 @@ if [ -z "$UTILS_DIR" ]; then
 	export ORIG_MAKE="$(which make)"
 	export PATH="$UTILS_DIR:$PATH"
 	add_lib() {
-		ln -sv ../lib/$1.c $1.c
+		[ -e ../lib/$1.c ] && ln -sv ../lib/$1.c $1.c
 		ln -sv ../lib/$1.h $1.h
 	}
 fi

@@ -34,4 +34,3 @@ Elf32_Nhdr *elf_note_next(Elf32_Nhdr *pnote);
 const char *elf_note_name(Elf32_Nhdr *pnote);
 const void *elf_note_desc(Elf32_Nhdr *pnote);
 #endif
-

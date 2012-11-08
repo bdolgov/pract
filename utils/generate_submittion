@@ -4,11 +4,26 @@
 
 declare -A used
 
+strip_guard() {
+	if [[ "$1" =~ \.h$ ]]; then
+		head -n -1 | tail -n +3
+	else
+		cat
+	fi
+}
+
 for src in *.c; do
 	for dep in $(get_deps $src) $src; do
 		if [ "${used[$dep]}" != "1" ]; then
-			cat $dep | egrep -v "^#include\s*\".*\"" | sed 's|\t|    |g'
+			cat $dep | strip_guard $dep | egrep -v "^#include\s*\".*\"" | sed 's|\t|    |g' >> /tmp/subm.1.$$
 			used[$dep]=1
 		fi
 	done
 done
+
+grep '#include' /tmp/subm.1.$$ > /tmp/subm.2.$$
+grep -v '#include' /tmp/subm.1.$$ >> /tmp/subm.2.$$
+
+
+
+cat /tmp/subm.2.$$
