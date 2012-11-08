@@ -8,11 +8,12 @@ int main(int argc, char** argv)
 	ElfFile *f = elf_open(argv[1]);
 
 	
-	int addr;
+	unsigned int addr;
 	while (scanf("%x", &addr) == 1)
 	{
+		printf("0x%08x ", addr);
 		int found = 0;
-    	for (int i = 0; i < f->hdr.e_phnum; ++i) {
+		for (int i = 0; i < f->hdr.e_phnum; ++i) {
 			if (f->segments[i].p_type == PT_LOAD &&
 				f->segments[i].p_vaddr <= addr &&
 				addr < f->segments[i].p_vaddr +  f->segments[i].p_memsz)
@@ -22,7 +23,7 @@ int main(int argc, char** argv)
 				{
 					int ret;
 					bd_readat_e(f->f, &ret, f->segments[i].p_offset + (addr - f->segments[i].p_vaddr), sizeof(int));
-					printf("%08X\n", ret);
+					printf("0x%08x\n", ret);
 				}
 				else
 				{
