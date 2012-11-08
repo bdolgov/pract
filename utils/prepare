@@ -1,0 +1,10 @@
+#!/bin/bash
+if [ -z "$UTILS_DIR" ]; then
+	export UTILS_DIR="$(cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
+	export ORIG_MAKE="$(which make)"
+	export PATH="$UTILS_DIR:$PATH"
+	add_lib() {
+		ln -sv ../lib/$1.c $1.c
+		ln -sv ../lib/$1.h $1.h
+	}
+fi

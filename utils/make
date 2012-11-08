@@ -1,0 +1,48 @@
+#!/bin/bash
+
+. $UTILS_DIR/utils.sh
+
+[ -x project.conf ] && . ./project.conf
+
+[ -z "$CFLAGS" ] && CFLAGS="-ggdb -std=c99 -c -m32"
+[ -z "$LDFLAGS" ] && LDFLAGS="-m32"
+project="$(basename `pwd`)"
+all_files="$(echo *.c *.h)"
+gen_makefile() {
+	all_files="*.h *.c"
+	echo "all: $project"
+	echo
+	echo "clean:"
+	echo "	rm -f *.o $project"
+	echo
+	echo "submit.cpp: $all_files"
+	echo "	generate_submittion > submit.cpp"
+	echo
+	echo "run: $project"
+	echo "	./$project"
+	echo
+	echo "vg: $project"
+	echo "	valgrind ./$project"
+	echo
+	echo "gdb: $project"
+	echo "	gdb ./$project"
+	echo
+	echo "archive: arcgive.tgz"
+	echo
+	echo "archive.tgz: $all_files"
+	echo "	generate_archive"
+	echo
+	for src in *.c; do
+		obj=$(echo $src | sed 's|\.c$|.o|')
+		echo "$obj: $src $(get_deps $src)"
+		echo "	gcc $CFLAGS $src -o $obj"
+		echo
+		objs="$objs $obj"
+	done
+	echo "$project:$objs"
+	echo "	gcc -o $project $objs $LDFLAGS"
+}
+#gen_makefile
+gen_makefile > /tmp/Makefile.$$
+$ORIG_MAKE -f /tmp/Makefile.$$ $*
+rm /tmp/Makefile.$$

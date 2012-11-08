@@ -1,0 +1,14 @@
+#!/bin/bash
+
+. $UTILS_DIR/utils.sh
+
+declare -A used
+
+for src in *.c; do
+	for dep in $(get_deps $src) $src; do
+		if [ "${used[$dep]}" != "1" ]; then
+			cat $dep | egrep -v "^#include\s*\".*\"" | sed 's|\t|    |g'
+			used[$dep]=1
+		fi
+	done
+done
