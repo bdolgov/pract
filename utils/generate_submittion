@@ -24,6 +24,5 @@ done
 grep '#include' /tmp/subm.1.$$ > /tmp/subm.2.$$
 grep -v '#include' /tmp/subm.1.$$ >> /tmp/subm.2.$$
 
-
-
 cat /tmp/subm.2.$$
+rm -f /tmp/subm.*.$$
