@@ -4,7 +4,7 @@
 
 [ -x project.conf ] && . ./project.conf
 
-[ -z "$CFLAGS" ] && CFLAGS="-ggdb -std=c99 -c -m32 -Wall -Werror"
+[ -z "$CFLAGS" ] && CFLAGS="-ggdb -std=c99 -c -m32 -Wall"
 [ -z "$LDFLAGS" ] && LDFLAGS="-m32"
 project="$(basename `pwd`)"
 all_files="$(echo *.c *.h)"
