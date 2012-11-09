@@ -15,9 +15,10 @@ typedef struct Stab
 
 stabinfo_t *stab_load(struct ElfFile* f)
 {
+	const Elf32_Shdr *stabsect = elf_find_section(f, ".stab");
+	if (!stabsect) return NULL;
 	stabinfo_t *s = malloc(sizeof(stabinfo_t));
 	s->str = elf_load_section(f, elf_find_section(f, ".stabstr"));
-	const Elf32_Shdr *stabsect = elf_find_section(f, ".stab");
 	Stab *stab = elf_load_section(f, stabsect);
 	int n = stabsect->sh_size / sizeof(Stab);
 	
