@@ -38,7 +38,7 @@ static int do_vector_size(char** v)
 	return i->size;
 }
 
-static void do_vector_pb(char** v, void* item)
+static void *do_vector_pb(char** v, void* item)
 {
 	vector_info_t* i = (vector_info_t*)(*v - sizeof(vector_info_t));
 	if (i->size == i->alloc)
@@ -47,7 +47,9 @@ static void do_vector_pb(char** v, void* item)
 		i = realloc(i, sizeof(vector_info_t) + i->elem_size * i->alloc);
 		*v = (char*)i + sizeof(vector_info_t);
 	}
-	memcpy(*v + i->elem_size * i->size++, item, i->elem_size);
+	void *new_place = *v + i->elem_size * i->size++;
+	memcpy(new_place, item, i->elem_size);
+	return new_place;
 }
 
 #endif
