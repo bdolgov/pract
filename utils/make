@@ -4,12 +4,13 @@
 
 [ -x project.conf ] && . ./project.conf
 
-[ -z "$CFLAGS" ] && CFLAGS="-ggdb -std=c99 -c -m32"
+[ -z "$CFLAGS" ] && CFLAGS="-ggdb -std=c99 -c -m32 -Wall -Werror"
 [ -z "$LDFLAGS" ] && LDFLAGS="-m32"
 project="$(basename `pwd`)"
 all_files="$(echo *.c *.h)"
 gen_makefile() {
-	all_files="*.h *.c"
+	shopt -s nullglob
+	all_files="$(echo *.h *.c)"
 	echo "all: $project"
 	echo
 	echo "clean:"
