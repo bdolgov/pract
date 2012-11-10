@@ -15,10 +15,11 @@ int main(int argc, char** argv)
 	while (scanf("%x", (unsigned int*)&addr) == 1)
 	{
 		stab_line_t *r = stab_find(s, (char*)addr);
-		if (r->fn->begin <= addr && addr < r->fn->end)
+		if (s->fns[r->fn].begin <= addr && addr < s->fns[r->fn].end)
 		{
 			printf("0x%08x:%s:%s:%x:%d\n",
-				(unsigned int)addr, r->fn->src->name, r->fn->name, addr - r->fn->begin, r->line);
+				(unsigned int)addr, s->srcs[s->fns[r->fn].src].name,
+				s->fns[r->fn].name, addr - s->fns[r->fn].begin, r->line);
 		}
 		else
 		{

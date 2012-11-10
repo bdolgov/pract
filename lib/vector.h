@@ -6,6 +6,7 @@
 
 #define vector_new(type) ((type*)do_vector_new(sizeof(type)))
 #define vector_push_back(v, item) do_vector_pb((char**)&v, (void*)&item)
+#define vector_push_back_i(v, item) (vector_push_back(v, item), vector_size(v) - 1)
 #define vector_size(v) do_vector_size((char**)&v)
 #define vector_delete(v) do_vector_delete((char**)&v)
 

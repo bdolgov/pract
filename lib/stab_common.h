@@ -11,14 +11,14 @@ typedef struct stab_fn_s
 	char *name;
 	char *begin;
 	char *end;
-	stab_src_t* src;
+	int src;
 } stab_fn_t;
 
 typedef struct stab_line_s
 {
 	char *begin;
 	int line;
-	stab_fn_t *fn;
+	int fn;
 } stab_line_t;
 
 typedef struct stabinfo_s

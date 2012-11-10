@@ -22,8 +22,7 @@ stabinfo_t *stab_load(struct ElfFile* f)
 	Stab *stab = elf_load_section(f, stabsect);
 	int n = stabsect->sh_size / sizeof(Stab);
 	
-	stab_src_t *src = NULL;
-	stab_fn_t *fn = NULL;
+	int src = -1, fn = -1;
 	s->srcs = vector_new(stab_src_t);
 	s->fns = vector_new(stab_fn_t);
 	s->lines = vector_new(stab_line_t);
@@ -38,31 +37,31 @@ stabinfo_t *stab_load(struct ElfFile* f)
 		{
 			stab_src_t new_src;
 			new_src.name = stabstr + stab[i].n_strx;
-			src = vector_push_back(s->srcs, new_src);
+			src = vector_push_back_i(s->srcs, new_src);
 		}
 		else if (stab[i].n_type == N_SO)
 		{
-			if (fn) fn->end = (char*)stab[i].n_value;
-			fn = NULL;
-			src = NULL;
+			if (fn != -1) s->fns[fn].end = (char*)stab[i].n_value;
+			fn = -1;
+			src = -1;
 		}
 		else if (stab[i].n_type == N_FUN)
 		{
-			if (fn) fn->end = (char*)stab[i].n_value;
+			if (fn != -1) s->fns[fn].end = (char*)stab[i].n_value;
 			stab_fn_t new_fn;
 			new_fn.begin = (char*)stab[i].n_value;
 			new_fn.src = src;
 			new_fn.name = stabstr + stab[i].n_strx;
 			char *delim = strchr(new_fn.name, ':');
 			if (delim) *delim = 0;
-			fn = vector_push_back(s->fns, new_fn);
+			fn = vector_push_back_i(s->fns, new_fn);
 		}
 		else if (stab[i].n_type == N_SLINE)
 		{
 			stab_line_t new_line;
 			new_line.fn = fn;
 			new_line.line = stab[i].n_desc;
-			new_line.begin = stab[i].n_value + fn->begin;
+			new_line.begin = stab[i].n_value + s->fns[fn].begin;
 			vector_push_back(s->lines, new_line);
 		}
 		else if (stab[i].n_type == 0)
@@ -88,7 +87,7 @@ void stab_delete(stabinfo_t* s)
 
 stab_line_t *stab_find(stabinfo_t* s, char* addr)
 {
-	int l = 0, r = vector_size(s->lines);
+	int l = 0, r = vector_size(s->lines) - 1;
 	while (l != r)
 	{
 		int c = (l + r) / 2;
