@@ -10,7 +10,10 @@ int main(int ac, char** av)
 	{
 		sscanf(buf, "%x-%x", &a1, &a2);
 		sum += a2 - a1;
-		if (buf[strlen(buf) - 1] != '\n') while (getc(stdin) != '\n');
+		if (buf[strlen(buf) - 1] != '\n')
+		{
+			while (getc(stdin) != '\n');
+		}
 	}
 	printf("%u\n", sum);
 }
