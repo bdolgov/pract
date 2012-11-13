@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <stdarg.h>
+#include <stdio.h>
+#include <sys/wait.h>
 
 #include "vector.h"
 
@@ -22,7 +24,7 @@ typedef struct
 } process_t;
 
 int *opened_fds;
-process_t *running_processes;
+process_t **running_processes;
 
 int process_start(process_t *p)
 {
@@ -49,7 +51,13 @@ int process_start(process_t *p)
 void process_init()
 {
 	opened_fds = vector_new(int);
-	running_processes = vector_new(process_t);
+	running_processes = vector_new(process_t*);
+}
+
+void process_deinit()
+{
+	vector_delete(opened_fds);
+	vector_delete(running_processes);
 }
 
 process_t *process_new()
@@ -65,6 +73,7 @@ void process_delete(process_t *p)
 {
 	vector_delete(p->redirs);
 	vector_delete(p->args);
+	free(p);
 }
 
 void process_set_args(process_t *p, int n, ...)
@@ -88,9 +97,9 @@ void process_wait()
 	{
 		for (int i = 0; i < vector_size(running_processes); ++i)
 		{
-			if (running_processes[i].pid == p)
+			if (running_processes[i]->pid == p)
 			{
-				running_processes[i].state = EXITED;
+				running_processes[i]->state = EXITED;
 				vector_remove(running_processes, i);
 				break;
 			}
@@ -140,12 +149,13 @@ int main(int ac, char** av)
 	process_start(pr2);
 	close(a1); close(a3);
 	close(pipes[0]); close(pipes[1]);
-	while (pr2->state != EXITED && pr3->state != EXITED)
+	while (pr2->state != EXITED || pr3->state != EXITED)
 	{
 		process_wait();
 	}
 	process_delete(pr1);
 	process_delete(pr2);
 	process_delete(pr3);
+	process_deinit();
 	return 0;
 }

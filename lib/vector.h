@@ -64,7 +64,7 @@ static void do_vector_pop(char** v)
 static void do_vector_remove(char** v, int idx)
 {
 	vector_info_t* i = (vector_info_t*)(*v - sizeof(vector_info_t));
-	memcpy(*v + idx * i->elem_size, *v + (--i->size)  * i->elem_size, i->elem_size); 
+	if (--i->size != idx) memcpy(*v + idx * i->elem_size, *v + i->size  * i->elem_size, i->elem_size); 
 }
 
 #endif
