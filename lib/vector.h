@@ -9,6 +9,8 @@
 #define vector_push_back_i(v, item) (vector_push_back(v, item), vector_size(v) - 1)
 #define vector_size(v) do_vector_size((char**)&v)
 #define vector_delete(v) do_vector_delete((char**)&v)
+#define vector_pop(v) do_vector_pop((char**)&v)
+#define vector_remove(v, i) do_vector_remove((char**)&v, i)
 
 typedef struct
 {
@@ -51,6 +53,18 @@ static void *do_vector_pb(char** v, void* item)
 	void *new_place = *v + i->elem_size * i->size++;
 	memcpy(new_place, item, i->elem_size);
 	return new_place;
+}
+
+static void do_vector_pop(char** v)
+{
+	vector_info_t* i = (vector_info_t*)(*v - sizeof(vector_info_t));
+	i->size--;
+}
+
+static void do_vector_remove(char** v, int idx)
+{
+	vector_info_t* i = (vector_info_t*)(*v - sizeof(vector_info_t));
+	memcpy(*v + idx * i->elem_size, *v + (--i->size)  * i->elem_size, i->elem_size); 
 }
 
 #endif
