@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/local/bin/bash
 
 . $UTILS_DIR/utils.sh
 
@@ -15,7 +15,7 @@ strip_guard() {
 for src in *.c; do
 	for dep in $(get_deps $src) $src; do
 		if [ "${used[$dep]}" != "1" ]; then
-			cat $dep | strip_guard $dep | egrep -v "^#include\s*\".*\"" | sed 's|\t|    |g' >> /tmp/subm.1.$$
+			cat $dep | strip_guard $dep | egrep -v "^#include\s*\".*\"" | sed 's|\\t|    |g' >> /tmp/subm.1.$$
 			used[$dep]=1
 		fi
 	done
