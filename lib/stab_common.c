@@ -3,6 +3,7 @@
 #include "vector.h"
 
 #include <stab.h>
+#include <stdlib.h>
 
 typedef struct Stab
 {
@@ -12,6 +13,12 @@ typedef struct Stab
 	uint16_t n_desc;
 	uintptr_t n_value;
 } Stab;
+
+static int compare_lines(const void* p1, const void* p2)
+{
+	const stab_line_t *a = (const stab_line_t*)p1, *b = (const stab_line_t*)p2;
+	return (a < b) ? -1 : (a > b);
+}
 
 stabinfo_t *stab_load(struct ElfFile* f)
 {
@@ -70,7 +77,7 @@ stabinfo_t *stab_load(struct ElfFile* f)
 			next_offset = stab[i].n_value;
 		}
 	}
-
+	qsort(s->lines, vector_size(s->lines), sizeof(stab_line_t), compare_lines);
 	free(stab);
 
 	return s;
