@@ -22,10 +22,10 @@ extern int *opened_fds;
 extern process_t **running_processes;
 
 int process_start(process_t *p);
-void process_init();
-void process_deinit();
-process_t *process_new();
+void process_init(void);
+void process_deinit(void);
+process_t *process_new(void);
 void process_delete(process_t *p);
 void process_set_args(process_t *p, int n, ...);
-void process_wait();
+void process_wait(void);
 #endif

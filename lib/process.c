@@ -33,19 +33,19 @@ int process_start(process_t *p)
 	return pid;
 }
 
-void process_init()
+void process_init(void)
 {
 	opened_fds = vector_new(int);
 	running_processes = vector_new(process_t*);
 }
 
-void process_deinit()
+void process_deinit(void)
 {
 	vector_delete(opened_fds);
 	vector_delete(running_processes);
 }
 
-process_t *process_new()
+process_t *process_new(void)
 {
 	process_t *p = calloc(sizeof(process_t), 1);
 	p->state = STOPPED;
@@ -75,7 +75,7 @@ void process_set_args(process_t *p, int n, ...)
 	vector_push_back(p->args, x);
 }
 
-void process_wait()
+void process_wait(void)
 {
 	pid_t p = wait(NULL);
 	if (p != -1)
