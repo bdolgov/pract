@@ -55,11 +55,11 @@ void child(int id, int* pipes)
 			}
 			else
 			{
+				printf("%d %d\n", id + 1, k);
+				fflush(stdout);
 				sop.sem_num = 1 - id;
 				sop.sem_op = 1;
 				semop(sem, &sop, 1);
-				printf("%d %d\n", id + 1, k);
-				fflush(stdout);
 				fprintf(out, "%d\n", k + 1);
 				fflush(out);
 			}
