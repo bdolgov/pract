@@ -6,7 +6,7 @@ int main(int ac, char** av)
 {
 	if (ac != 7) return 1;
 	char *pr1 = av[1], *pr2 = av[2], *pr3 = av[3];
-	char *a1 = av[4], *a2 = av[5], *a3 = av[7];
+	char *a1 = av[4], *a2 = av[5], *a3 = av[6];
 
 	int pipes[2]; pipe(pipes);
 
@@ -17,7 +17,8 @@ int main(int ac, char** av)
 		close(pipes[1]);
 		if (fork() == 0)
 		{
-			execl(pr1, NULL);
+			execl(pr1, pr1, NULL);
+			return 127;
 		}
 		else
 		{
@@ -27,7 +28,8 @@ int main(int ac, char** av)
 				int fd = open(a1, O_RDONLY);
 				dup2(fd, 0);
 				close(fd);
-				execl(pr2, NULL);
+				execl(pr2, pr2, NULL);
+				return 127;
 			}
 			else
 			{
@@ -45,13 +47,16 @@ int main(int ac, char** av)
 			int fd = creat(a3, 0777);
 			dup2(fd, 1);
 			close(fd);
-			execl(pr3, a2, NULL);
+			execl(pr3, pr3, a2, NULL);
+			return 127;
 		}
 		else
 		{
-			wait(NULL);
+			close(pipes[0]);
+			close(pipes[1]);
 			wait(NULL);
 		}
+		wait(NULL);
 	}
 	return 0;
 }
