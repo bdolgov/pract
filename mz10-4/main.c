@@ -14,21 +14,21 @@ int my_id;
 
 int signals_arrived = 0;
 
-void call_die(int unused)
-{
-	die();
-}
-
-void die()
+void die(void)
 {
 	fclose(pin);
 	fclose(pout);
 	exit(0);
 }
 
+void call_die(int unused)
+{
+	die();
+}
+
 void hndl(int unused)
 {
-	fprintf(stderr, "%d hndl\n", my_id);
+//	fprintf(stderr, "%d hndl\n", my_id);
 	signal(SIGUSR1, hndl);
 	int cur;
 	if (fscanf(pin, "%d", &cur) != 1) die(); //Никогда не случится
@@ -39,7 +39,7 @@ void hndl(int unused)
 	}
 	if (cur == n)
 	{
-		fprintf(stderr, "%d exiting\n", my_id);
+//		fprintf(stderr, "%d exiting\n", my_id);
 		kill(friend_pid, SIGTERM);
 		die();
 	}
@@ -47,15 +47,9 @@ void hndl(int unused)
 	fflush(stdout);
 	fprintf(pout, "%d\n", cur + 1);
 	fflush(pout);
-	fprintf(stderr, "%d beforekill\n", my_id);
+//	fprintf(stderr, "%d beforekill\n", my_id);
 	kill(friend_pid, SIGUSR1);
-	fprintf(stderr, "%d afterkill\n", my_id);
-}
-
-void child(int n)
-{
-	my_id = n;
-	for (;;) sleep(1);
+//	fprintf(stderr, "%d afterkill\n", my_id);
 }
 
 int main(int ac, char** av)
@@ -67,19 +61,19 @@ int main(int ac, char** av)
 	pout = fdopen(pipes[1], "w");
 	signal(SIGUSR1, hndl);
 	signal(SIGTERM, call_die);
+	friend_pid = -1;
+	my_id = 1;
 	pid_t p1 = fork();
 	if (p1 == 0)
 	{
-		friend_pid = -1;
-		child(1);
-		return 0;
+		for (;;) sleep(1);
 	}
+	friend_pid = p1;
+	my_id = 2;
 	pid_t p2 = fork();
 	if (p2 == 0)
 	{
-		friend_pid = p1;
-		child(2);
-		return 0;
+		for (;;) sleep(1);
 	}
 	/* Вместо "1" первому процессу приходит PID второго процесса.
 	 * Доставлять первому процессу единицу через pipe невозможно,
