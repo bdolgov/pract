@@ -4,62 +4,55 @@
 #include <wait.h>
 #include <stdlib.h>
 #include <sys/types.h>
-
-void write_int(int fd, int n)
-{
-	char buf[sizeof("2147483647")];
-	sprintf(buf, "%d", n);
-	write(fd, buf, strlen(buf) + 1);
-}
-
-int read_int(int fd, int *eof)
-{
-	char buf[sizeof("2147483647")];
-	char c = 0xff;
-	char *i = buf;
-	*eof = 0;
-	while (read(fd, &c, 1) == 1)
-	{
-		*(i++) = c;
-		if (!c) break;
-	}
-	if (c)
-	{
-		*eof = 1;
-		return 0;
-	}
-	else
-	{
-		int ret;
-		sscanf(buf, "%d", &ret);
-		return ret;
-	}
-}
+#include <signal.h>
 
 int pipes[2];
 pid_t friend_pid;
+FILE *pin, *pout;
 int n;
 int my_id;
 
+int signals_arrived = 0;
+
+void call_die(int unused)
+{
+	die();
+}
+
+void die()
+{
+	fclose(pin);
+	fclose(pout);
+	exit(0);
+}
+
 void hndl(int unused)
 {
-	int eof;
-	int cur = read_int(pipes[0], &eof);
-	if (cur == n || eof) exit(0);
+	fprintf(stderr, "%d hndl\n", my_id);
+	signal(SIGUSR1, hndl);
+	int cur;
+	if (fscanf(pin, "%d", &cur) != 1) die(); //Никогда не случится
+	if (friend_pid == -1)
+	{
+		friend_pid = cur;
+		cur = 1;
+	}
+	if (cur == n)
+	{
+		fprintf(stderr, "%d exiting\n", my_id);
+		kill(friend_pid, SIGTERM);
+		die();
+	}
 	printf("%d %d\n", my_id, cur);
 	fflush(stdout);
-	write_int(pipes[1], cur + 1);
+	fprintf(pout, "%d\n", cur + 1);
+	fflush(pout);
+	fprintf(stderr, "%d beforekill\n", my_id);
 	kill(friend_pid, SIGUSR1);
-	signal(SIGUSR1, hndl);
+	fprintf(stderr, "%d afterkill\n", my_id);
 }
 
-void set_friend(int unused)
-{
-	int eof = 0;
-	friend_pid = read_int(pipes[0], &eof);
-}
-
-void child(int n, int readfd, int writefd)
+void child(int n)
 {
 	my_id = n;
 	for (;;) sleep(1);
@@ -70,33 +63,33 @@ int main(int ac, char** av)
 	if (ac != 2) return 1;
 	n = atoi(av[1]);
 	pipe(pipes);
-	pid_t p1 = fork();
+	pin = fdopen(pipes[0], "r");
+	pout = fdopen(pipes[1], "w");
 	signal(SIGUSR1, hndl);
-	signal(SIGUSR2, set_friend);
+	signal(SIGTERM, call_die);
+	pid_t p1 = fork();
 	if (p1 == 0)
 	{
-		fried_pid = -1;
-		close(pipes[0][0]);
-		close(pipes[1][1]);
-		child(1, n, pipes[1][0], pipes[0][1]);
+		friend_pid = -1;
+		child(1);
 		return 0;
 	}
 	pid_t p2 = fork();
 	if (p2 == 0)
 	{
-		close(pipes[1][0]);
-		close(pipes[0][1]);
-		friend_pid = -1;
-		child(2, n, pipes[0][0], pipes[1][1]);
+		friend_pid = p1;
+		child(2);
 		return 0;
 	}
-	write_int(pipes[1], p1);
-	kill(SIGUSR2, p1);
-	write_int(pipes[1], 1);
-	kill(SIGUSR1, p1);
+	/* Вместо "1" первому процессу приходит PID второго процесса.
+	 * Доставлять первому процессу единицу через pipe невозможно,
+	 * так как порядок доставки сигналов не гарантируется,
+	 * а обработка сигнала может быть прервана новым сигналом. */
+	fprintf(pout, "%d\n", (int)p2);
+	fflush(pout);
+	kill(p1, SIGUSR1);
+	fclose(pin); fclose(pout);
 	int finished = 0;
-	close(pipes[0]);
-	close(pipes[1]);
 	while (finished != 2)
 	{
 		if (wait(NULL) > 0) ++finished;
