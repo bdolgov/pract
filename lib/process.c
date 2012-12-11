@@ -26,7 +26,7 @@ int process_start(process_t *p)
 			close(opened_fds[i]);
 		}
 		execv(p->args[0], p->args);
-		exit(255);
+		exit(127);
 	}
 	p->pid = pid;
 	vector_push_back(running_processes, p);
@@ -67,11 +67,11 @@ void process_set_args(process_t *p, int n, ...)
 	va_start(ap, n);
 	for (int i = 0; i < n; ++i)
 	{
-		char **x = va_arg(ap, char**);
+		char *x = va_arg(ap, char*);
 		vector_push_back(p->args, x);
 	}
 	va_end(ap);
-	char **x = NULL;
+	char *x = NULL;
 	vector_push_back(p->args, x);
 }
 
