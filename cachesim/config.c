@@ -4,16 +4,18 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <ctype.h>
 
 #include "vector.h"
 #include "util.h"
 
 enum { MAX_LINE_LEN = 1000 };
 
+
 static void strtrim(char** begin, char** end)
 {
 	while (**begin == ' ' && *begin != *end) ++*begin;
-	while (*(*end - 1) == ' ' && *begin != *end) --*end;
+	while (isspace(*(*end - 1)) && *begin != *end) --*end;
 }
 
 static int cmp_entries(const void* p1, const void* p2)
@@ -52,11 +54,17 @@ config_t config_parse(const char* filename)
 		strtrim(&nbegin, &nend);
 		strtrim(&vbegin, &vend);
 		
-		if (nbegin == nend || vbegin == vend)
+		if (nbegin == nend || vbegin == vend || (!isalpha(*nbegin) && *nbegin != '_'))
 		{
 			cleanup(); report_error("Syntax error in line %d of %s", cur_line, filename);
 		}
-
+		for (char *j = nbegin; j != nend; ++j)
+		{
+			if (!isalpha(*j) && *j != '-' && *j != '_' && !isdigit(*j))
+			{
+				cleanup(); report_error("Syntax error in line %d of %s", cur_line, filename);
+			}
+		}
 		config_entry_t entry;
 		entry.name = malloc((nend - nbegin) + (vend - vbegin) + 2);
 		memcpy(entry.name, nbegin, nend - nbegin);
@@ -75,7 +83,9 @@ config_t config_parse(const char* filename)
 	{
 		if (!strcmp(ret[i].name, ret[i - 1].name))
 		{
-			cleanup(); report_error("Duplicate parameter %s in %s", ret[i].name, filename); // FIXME
+			report_error2(-1, "Duplicate parameter %s in %s", ret[i].name, filename);
+			cleanup();
+			exit(1);
 		}
 	}
 
