@@ -98,7 +98,11 @@ const char* config_string(config_t c, const char* name)
 {
 	config_entry_t x = { (char*)name, NULL };
 	config_entry_t *r = bsearch(&x, c, vector_size(c), sizeof(*c), cmp_entries);
-	if (!r) return NULL;
+	if (!r)
+	{
+		fprintf(stderr, "Configuration parameter %s is undefined\n", name);
+		return NULL;
+	}
 	return r->value;
 }
 
@@ -110,7 +114,11 @@ bool config_int(config_t c, const char* name, int* ret)
 	char *eptr = NULL;
 	errno = 0;
 	*ret = strtol(str, &eptr, 10);
-	if (*eptr || errno)  return false;
+	if (*eptr || errno)
+	{
+		fprintf(stderr, "Configuration parameter %s value is invalid\n", name);
+		return false;
+	}
 
 	return true;
 }

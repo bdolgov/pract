@@ -1,9 +1,12 @@
-#include <stdlib.h>
 #include "util.h"
 #include "vector.h"
 #include "config.h"
+#include "memory.h"
+#include "util.h"
+
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 void do_print_config(config_t config)
 {
@@ -13,16 +16,48 @@ void do_print_config(config_t config)
 	}
 }
 
+real_memory_t* configure_real_memory(config_t config)
+{
+	int size, read_time, write_time, width;
+	if (!config_int(config, "memory_size", &size) ||
+		!config_int(config, "memory_read_time", &read_time) ||
+		!config_int(config, "memory_write_time", &write_time) ||
+		!config_int(config, "memory_width", &width))
+	{
+		return NULL;
+	}
+
+	return create_real_memory(size, read_time, write_time, width);
+}
+
+memory_t* configure_memory(config_t config)
+{
+	return NULL;
+}
+
 int main(int ac, char** av)
 {
 	char *config_name = NULL;
-	bool print_config = false;
+	bool print_config = false, dump_memory = false;
+	bool statistics = false, disable_cache = false;
 
 	for (int i = 1; i < ac; ++i)
 	{
 		if (!strcmp(av[i], "--print-config"))
 		{
 			print_config = true;
+		}
+		else if (!strcmp(av[i], "--dump-memory"))
+		{
+			dump_memory = true;
+		}
+		else if (!strcmp(av[i], "--statistics"))
+		{
+			statistics = true;
+		}
+		else if (!strcmp(av[i], "--disable-cache"))
+		{
+			disable_cache = true;
 		}
 		else if (av[i][0] == '-' && av[i][1] == '-')
 		{
@@ -44,8 +79,46 @@ int main(int ac, char** av)
 	if (print_config)
 	{
 		do_print_config(config);
+		goto cleanup;
 	}
-	else
+
+	real_memory_t *real_memory = configure_real_memory(config);
+	memory_t *memory = disable_cache ? (memory_t*)real_memory : configure_memory(config);
+
+	if (!real_memory)
 	{
+		config_delete(config);
+		return 1;
 	}
+	if (!memory)
+	{
+		real_memory->free(real_memory);
+		config_delete(config);
+		return 1;
+	}
+	
+	traceop_t *op;
+	while ((op = read_trace(stdin)))
+	{
+		if (op->op == TRACE_READ)
+		{
+			memory->read(memory, op->addr, op->size, (char*)&op->value);
+		}
+		else 
+		{
+			memory->write(memory, op->addr, op->size, (char*)&op->value);
+		}
+	}
+
+	if (dump_memory)
+	{
+		real_memory_dump(real_memory, stdout);
+	}
+	if (statistics)
+	{
+		statinfo_dump(&memory->stat, stdout);
+	}
+	memory->free(memory);
+cleanup:
+	config_delete(config);
 }
