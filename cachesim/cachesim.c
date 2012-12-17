@@ -30,9 +30,39 @@ real_memory_t* configure_real_memory(config_t config)
 	return create_real_memory(size, read_time, write_time, width);
 }
 
-memory_t* configure_memory(config_t config)
+memory_t* configure_memory(config_t config, memory_t *underlying)
 {
-	return NULL;
+	int size, block, assoc, replacement_st, write_st;
+	int read_time, write_time;
+	int seed;
+	char *_replacement_st, *_write_st, *_assoc;
+	if (!config_int(config, "cache_size", &size) ||
+		!config_int(config, "cache_block", &block) ||
+		!config_int(config, "cache_read_time", &read_time) ||
+		!config_int(config, "cache_write_time", &write_time) ||
+		!config_int(config, "seed", &seed) || 
+		!(_replacement_st = config_string(config, "replacement_strategy")) ||
+		!(_write_st = config_string(config, "write_strategy")) ||
+		!(_assoc = config_string(config, "associativity")))
+	{
+		return NULL;
+	}
+
+	return create_cache(size, block, strcmp(_assoc, "full") ? ASSOC_DIRECT : ASSOC_FULL,
+		strcmp(_write_st, "write-back") ? WRITE_THROUGH : WRITE_BACK,
+		read_time, write_time, underlying, random_new_rand(seed));
+
+}
+
+char *convert(long long val, int size)
+{
+	char *bytes = (char*)&val;
+	static char ret[8];
+	for (int i = 0; i < size; ++i)
+	{
+		ret[i] = bytes[size - 1 - i];
+	}
+	return ret;
 }
 
 int main(int ac, char** av)
@@ -83,7 +113,7 @@ int main(int ac, char** av)
 	}
 
 	real_memory_t *real_memory = configure_real_memory(config);
-	memory_t *memory = disable_cache ? (memory_t*)real_memory : configure_memory(config);
+	memory_t *memory = disable_cache ? (memory_t*)real_memory : configure_memory(config, real_memory);
 
 	if (!real_memory)
 	{
@@ -102,21 +132,22 @@ int main(int ac, char** av)
 	{
 		if (op->op == TRACE_READ)
 		{
-			memory->read(memory, op->addr, op->size, (char*)&op->value);
+			memory->read(memory, op->addr, op->size, NULL);
 		}
 		else 
 		{
-			memory->write(memory, op->addr, op->size, (char*)&op->value);
+			memory->write(memory, op->addr, op->size, NULL);
 		}
+		memory->reveal(memory, op->addr, op->size, convert(op->value, op->size));
 	}
-
+	memory->flush(memory);
 	if (dump_memory)
 	{
 		real_memory_dump(real_memory, stdout);
 	}
 	if (statistics)
 	{
-		statinfo_dump(&memory->stat, stdout);
+		statinfo_dump(memory->stat, stdout);
 	}
 	memory->free(memory);
 cleanup:
