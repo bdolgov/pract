@@ -55,8 +55,7 @@ real_memory_t *create_real_memory(int size, int read_time, int write_time, int w
 	ret->write = real_memory_write;
 	ret->flush = real_memory_flush;
 	ret->underlying = NULL;
-	ret->data = malloc(size);
-	ret->used = calloc(size / 8, 1);
+	ret->data = calloc(size, sizeof(cell_t));
 	ret->reveal = real_memory_reveal;
 	return ret;
 }
@@ -185,6 +184,7 @@ void cache_write_writeback(cache_t* mem, unsigned int addr, int size, cell_t* da
 					// FIXME
 				}
 			}
+			block->dirty = 1;
 		}
 	}
 }
@@ -226,7 +226,7 @@ memory_t *create_cache(int size, int block, int assoc, int write_st, int read_ti
 	mem->stat->hit_counter_needed = 1;
 	for (int i = 0; i < mem->size / mem->block; ++i)
 	{
-		mem->blocks->data = calloc(sizeof(cell_t), mem->block);
+		mem->blocks[i].data = calloc(sizeof(cell_t), mem->block);
 	}
 	if (assoc == ASSOC_DIRECT)
 	{
@@ -251,5 +251,5 @@ memory_t *create_cache(int size, int block, int assoc, int write_st, int read_ti
 	mem->reveal = cache_reveal;
 	mem->read_time = read_time;
 	mem->write_time = write_time;
-	return mem;
+	return (memory_t*)mem;
 }

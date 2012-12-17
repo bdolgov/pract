@@ -27,6 +27,8 @@ void child(int i)
 	
 	while (msgrcv(msg, messages + size, sizeof(msg_t), i, IPC_NOWAIT) != -1)
 	{
+		printf("read %d %s\n", messages[size].author, messages[size].txt);
+		++size;
 		if (size == alloc)
 		{
 			alloc *= 2;

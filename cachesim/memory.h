@@ -46,7 +46,6 @@ typedef struct real_memory_s
 	void (*flush)(struct real_memory_s* mem);
 	struct memory_s *underlying;
 	cell_t *data;
-	char *used;
 	int size, read_time, write_time, width;
 } real_memory_t;
 
